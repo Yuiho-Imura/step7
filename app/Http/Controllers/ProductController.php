@@ -6,6 +6,10 @@ namespace App\Http\Controllers;
 use App\Models\Product; // Productモデルを現在のファイルで使用できるようにするための宣言です。
 use App\Models\Company; // Companyモデルを現在のファイルで使用できるようにするための宣言です。
 use Illuminate\Http\Request; // Requestクラスという機能を使えるように宣言します
+use App\Http\Requests\ProductRequest;
+use Illuminate\Support\Facades\DB;
+
+
 // Requestクラスはブラウザに表示させるフォームから送信されたデータをコントローラのメソッドで引数として受け取ることができます。
 
 class ProductController extends Controller //コントローラークラスを継承します（コントローラーの機能が使えるようになります）
@@ -52,43 +56,48 @@ class ProductController extends Controller //コントローラークラスを�
     // 上記の条件(クエリ）に基づいて商品を取得し、10件ごとのページネーションを適用
     $products = $query->paginate(10);
 
+    $companies = Company::all();
+    return view('products.index', ['products' => $products, 'companies' => $companies]);
+    
 
     // 商品一覧ビューを表示し、取得した商品情報をビューに渡す
-    return view('products.index', ['products' => $products]);
+   //return view('products.index', ['products' => $products]);
+    //return view('products.index', Compact('products','companies'));
 }
 
     public function create()
     {
-        // 商品作成画面で会社の情報が必要なので、全ての会社の情報を取得します。
+        // 商品作成画面で会社の情報が必要なので、全ての会社の情報を取得
         $companies = Company::all();
+        
 
-        // 商品作成画面を表示します。その際に、先ほど取得した全ての会社情報を画面に渡します。
+        // 商品作成画面を表示します。その際に、先ほど取得した全ての会社情報を画面に渡す
         return view('products.create', compact('companies'));
     }
 
     // 送られたデータをデータベースに保存するメソッドです
-    public function store(Request $request) // フォームから送られたデータを　$requestに代入して引数として渡している
+    public function store(ProductRequest $request) // フォームから送られたデータを　$requestに代入して引数として渡している
     {
-        // リクエストされた情報を確認して、必要な情報が全て揃っているかチェックします。
+        DB::beginTransaction();
+
+    try {
+        // リクエストされた情報を確認して、必要な情報が全て揃っているかチェック
         // ->validate()メソッドは送信されたリクエストデータが
-        // 特定の条件を満たしていることを確認します。
-        $request->validate([
-            'product_name' => 'required', //requiredは必須という意味です
-            'company_id' => 'required',
-            'price' => 'required',
-            'stock' => 'required',
-            'comment' => 'nullable', //'nullable'はそのフィールドが未入力でもOKという意味です
-            'img_path' => 'nullable|image|max:2048',
-        ]);
+        // 特定の条件を満たしていることを確認
+        //$request->validate([
+            //'product_name' => 'required', //requiredは必須という意味
+           // 'company_id' => 'required',
+            //'price' => 'required',
+            //'stock' => 'required',
+            //'comment' => 'nullable', //'nullable'はそのフィールドが未入力でもOKという意味
+           //'img_path' => 'nullable|image|max:2048',
+       // ]);
         // '|'はパイプと呼ばれる記号で、バリデーションルールを複数指定するときに使います
         // 'image'はそのフィールドが画像ファイルであることを指定するルールです
-        // max:2048'は最大2048KB（2メガバイト）までという意味です
         
         // フォームが一部空欄のまま送信ボタンを押しても、フォームの画面にリダイレクトされ
         // フォームの値が未入力である旨の警告メッセージが表示されます
-
-
-        // 新しく商品を作ります。そのための情報はリクエストから取得します。
+       // 新しく商品を作ります。そのための情報はリクエストから取得します。
         $product = new Product([
             'product_name' => $request->get('product_name'),
             'company_id' => $request->get('company_id'),
@@ -98,8 +107,6 @@ class ProductController extends Controller //コントローラークラスを�
         ]);
         //new Product([]) によって新しい「Product」（レコード）を作成しています。
         //new を使うことで新しいインスタンスを作成することができます
-
-
 
         // リクエストに画像が含まれている場合、その画像を保存します。
         if($request->hasFile('img_path')){ 
@@ -120,6 +127,12 @@ class ProductController extends Controller //コントローラークラスを�
 
         // 作成したデータベースに新しいレコードとして保存します。
         $product->save();
+
+        DB::commit();
+    } catch (\Exception $e) {
+        DB::rollback();
+        return back();
+    }
 
         // 全ての処理が終わったら、商品一覧画面に戻ります。
         return redirect('products');
@@ -144,25 +157,42 @@ class ProductController extends Controller //コントローラークラスを�
         return view('products.edit', compact('product', 'companies'));
     }
 
-    public function update(Request $request, Product $product)
+    public function update(ProductRequest $request, Product $product)
     {
-        // リクエストされた情報を確認して、必要な情報が全て揃っているかチェックします。
-        $request->validate([
-            'product_name' => 'required',
-            'price' => 'required',
-            'stock' => 'required',
-        ]);
-        //バリデーションによりフォームに未入力項目があればエラーメッセー発生させる（未入力です　など）
+        DB::beginTransaction();
 
-        // 商品の情報を更新します。
+    try {
+        // リクエストされた情報を確認して、必要な情報が全て揃っているかチェック
+       // $request->validate([
+           //'product_name' => 'required',
+            //'price' => 'required',
+            //'stock' => 'required',
+      // ]);
+
+
+        // 商品の情報を更新
         $product->product_name = $request->product_name;
         //productモデルのproduct_nameをフォームから送られたproduct_nameの値に書き換える
         $product->price = $request->price;
         $product->stock = $request->stock;
+        $product->comment = $request->comment;
+        $product->company_id = $request->company_id;
+        //$product->img_path = $request->img_path;
 
-        // 更新した商品を保存します。
+        if($request->hasFile('img_path')){ 
+            $filename = $request->img_path->getClientOriginalName();
+            $filePath = $request->img_path->storeAs('products', $filename, 'public');
+            $product->img_path = '/storage/' . $filePath;
+        }
+
+        // 更新した商品を保存:$productに対して行われた変更をデータベースに保存するためのメソッド（機能）
         $product->save();
-        // モデルインスタンスである$productに対して行われた変更をデータベースに保存するためのメソッド（機能）です。
+
+        DB::commit();
+    } catch (\Exception $e) {
+        DB::rollback();
+        return back();
+    }
 
         // 全ての処理が終わったら、商品一覧画面に戻ります。
         return redirect()->route('products.index')
@@ -173,13 +203,17 @@ class ProductController extends Controller //コントローラークラスを�
     public function destroy(Product $product)
 //(Product $product) 指定されたIDで商品をデータベースから自動的に検索し、その結果を $product に割り当てます。
     {
-        // 商品を削除します。
-        $product->delete();
 
-        // 全ての処理が終わったら、商品一覧画面に戻ります。
-        return redirect('/products');
-        //URLの/productsを検索します
-        //products　/がなくても検索できます
+        try {
+            // 商品を削除します。
+           $product->delete();
+            return redirect()->route('products.index')->with('message', '商品が削除されました');
+        } catch (\Exception $e) {
+            return redirect()->route('products.index')->with('message', '商品の削除中にエラーが発生しました: ' . $e->getMessage());
+        } 
+
+
+        
     }
 }
 

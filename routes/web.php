@@ -22,6 +22,7 @@ Route::get('/', function () {
 });
 // もしCompanyControllerだった場合は
 // companies.index のように、英語の正しい複数形になります。
+Route::delete('/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
 
 
 Auth::routes();
@@ -36,6 +37,5 @@ Auth::routes();
 Route::group(['middleware' => 'auth'], function () {
     Route::resource('products', ProductController::class);
 });
-
 
 

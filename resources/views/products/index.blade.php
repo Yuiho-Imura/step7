@@ -24,32 +24,41 @@
             <input type="text" name="search" class="form-control" placeholder="商品名" value="{{ request('search') }}">
         </div>
 
-        <!-- 最小価格の入力欄 -->
+        <!-- 最小価格の入力欄 
         <div class="col-sm-12 col-md-2">
             <input type="number" name="min_price" class="form-control" placeholder="最小価格" value="{{ request('min_price') }}">
-        </div>
+        </div>-->
 
-        <!-- 最大価格の入力欄 -->
+        <!-- 最大価格の入力欄 
         <div class="col-sm-12 col-md-2">
             <input type="number" name="max_price" class="form-control" placeholder="最大価格" value="{{ request('max_price') }}">
-        </div>
+        </div>-->
 
-        <!-- 最小在庫数の入力欄 -->
+        <!-- 最小在庫数の入力欄 
         <div class="col-sm-12 col-md-2">
             <input type="number" name="min_stock" class="form-control" placeholder="最小在庫" value="{{ request('min_stock') }}">
-        </div>
+        </div>-->
 
-        <!-- 最大在庫数の入力欄 -->
+        <!-- 最大在庫数の入力欄 
         <div class="col-sm-12 col-md-2">
             <input type="number" name="max_stock" class="form-control" placeholder="最大在庫" value="{{ request('max_stock') }}">
-        </div>
-
+        </div>-->
+      
+        <div class="col-sm-12 col-md-3">
+        <select class="form-select" id="company_id" name="company_id">
+            <option value="">すべてのメーカー</option>
+            @foreach($companies as $company)
+            <option value="{{ $company->id }}" {{ request('company_id') == $company->id ? 'selected' : '' }}>{{ $company->company_name }}</option>
+            @endforeach </select> </div>
+       
         <!-- 絞り込みボタン -->
         <div class="col-sm-12 col-md-1">
             <button class="btn btn-outline-secondary" type="submit">絞り込み</button>
         </div>
     </form>
 </div>
+
+
 
 <!-- 検索条件をリセットするためのリンクボタン -->
 <a href="{{ route('products.index') }}" class="btn btn-success mt-3">検索条件を元に戻す</a>
@@ -78,7 +87,7 @@
             @foreach ($products as $product)
                 <tr>
                     <td>{{ $product->product_name }}</td>
-                    <td>{{ $product->company->name }}</td>
+                    <td>{{ $product->company->company_name}}</td>
                     <td>{{ $product->price }}</td>
                     <td>{{ $product->stock }}</td>
                     <td>{{ $product->comment }}</td>
@@ -90,7 +99,8 @@
                         <form method="POST" action="{{ route('products.destroy', $product) }}" class="d-inline">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="btn btn-danger btn-sm mx-1">削除</button>
+                            <button type="submit" class="btn btn-danger btn-sm mx-1"
+                            onclick="return confirm('本当に削除しますか？')">削除</button>
                         </form>
                     </td>
                 </tr>
