@@ -15,10 +15,10 @@
 
                             <div class="mb-3">
                                 <label for="product_name" class="form-label">商品名<span style="color: red;">*</span></label>
-                                <input type="text" class="form-control" id="product_name" name="product_name" value="{{ $product->product_name }}" required>
+                                <input type="text" class="form-control" id="product_name" name="product_name" value="{{ $product->product_name }}" >
                                 @if($errors->has('product_name'))
-        <p class="text-danger">{{ $errors->first('product_name') }}</p>
-    @endif
+                                  <p class="text-danger">{{ $errors->first('product_name') }}</p>
+                                 @endif
                             </div>
 
                             <div class="mb-3">
@@ -29,24 +29,24 @@
                                     @endforeach
                                 </select>
                                 @if($errors->has('company_id'))
-        <p class="text-danger">{{ $errors->first('company_id') }}</p>
-            @endif
+                                 <p class="text-danger">{{ $errors->first('company_id') }}</p>
+                                   @endif
                             </div>
 
                             <div class="mb-3">
                                 <label for="price" class="form-label">価格<span style="color: red;">*</span></label>
-                                <input type="number" class="form-control" id="price" name="price" value="{{ $product->price }}" required>
+                                <input type="number" class="form-control" id="price" name="price" value="{{ $product->price }}" >
                                 @if($errors->has('price'))
-        <p class="text-danger">{{ $errors->first('price') }}</p>
-    @endif
+                                 <p class="text-danger">{{ $errors->first('price') }}</p>
+                                 @endif
                             </div>
 
                             <div class="mb-3">
                                 <label for="stock" class="form-label">在庫数<span style="color: red;">*</span></label>
-                                <input type="number" class="form-control" id="stock" name="stock" value="{{ $product->stock }}" required>
+                                <input type="number" class="form-control" id="stock" name="stock" value="{{ $product->stock }}" >
                                 @if($errors->has('stock'))
-        <p class="text-danger">{{ $errors->first('stock') }}</p>
-    @endif
+                                 <p class="text-danger">{{ $errors->first('stock') }}</p>
+                                 @endif
                             </div>
 
                             <div class="mb-3">

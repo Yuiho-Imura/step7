@@ -24,7 +24,7 @@ class ProductRequest extends FormRequest
     public function rules()
     {
         return [
-            'product_name' => 'required', //requiredは必須
+            'product_name' => 'required', 
             'company_id' => 'required',
             'price' => 'required|numeric',
             'stock' => 'required|numeric',
