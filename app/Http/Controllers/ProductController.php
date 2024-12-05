@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\DB;
 
 class ProductController extends Controller 
 {
-    
+
     public function index(Request $request)
 {
     $query = Product::query();
@@ -49,6 +49,11 @@ class ProductController extends Controller
     $products = $query->paginate(10);
 
     $companies = Company::all();
+
+    if ($request->ajax()) {
+        return view('products.index', compact('products', 'companies'))->renderSections()['content'];
+    }
+    
     return view('products.index', ['products' => $products, 'companies' => $companies]);
     
 }
@@ -140,14 +145,14 @@ class ProductController extends Controller
     public function destroy(Product $product)
 
     {
-
+        
         try {
-            
            $product->delete();
-            return redirect()->route('products.index')->with('message', '商品が削除されました');
+           return response()->json(['message' => '削除しました。'], 200);
         } catch (\Exception $e) {
-            return redirect()->route('products.index')->with('message', '商品の削除中にエラーが発生しました: ' . $e->getMessage());
-        } 
+            return response()->json(['message' => '削除に失敗しました。'], 500);
+       }
+     
 
 
         

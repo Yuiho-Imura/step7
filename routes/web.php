@@ -5,17 +5,6 @@ use App\Http\Controllers\ProductController;
 use Illuminate\Support\Facades\Auth;
 
 
-Route::get('/', function () {
-    if (Auth::check()) {
-        
-        return redirect()->route('products.index');
-        
-    } else {
-        return redirect()->route('login');
-        
-    }
-});
-
 Route::delete('/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
 
 

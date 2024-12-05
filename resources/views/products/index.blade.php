@@ -14,8 +14,9 @@
     
     <h2>検索条件で絞り込み</h2>
     
-    <form action="{{ route('products.index') }}" method="GET" class="row g-3">
-
+    <!-- <form action="{{ route('products.index') }}" method="GET" class="row g-3"> -->
+    <form id="search-form" method="GET" class="row g-3">
+        
         <div class="col-sm-12 col-md-3">
             <input type="text" name="search" class="form-control" placeholder="商品名" value="{{ request('search') }}">
         </div>
@@ -27,9 +28,32 @@
             @foreach($companies as $company)
             <option value="{{ $company->id }}" {{ request('company_id') == $company->id ? 'selected' : '' }}>{{ $company->company_name }}</option>
             @endforeach </select> </div>
+
+            
+
+
+<div class="col-sm-12 col-md-2">
+    <input type="number" name="min_price" class="form-control" placeholder="最小価格" value="{{ request('min_price') }}">
+</div>
+
+
+<div class="col-sm-12 col-md-2">
+    <input type="number" name="max_price" class="form-control" placeholder="最大価格" value="{{ request('max_price') }}">
+</div>
+
+
+<div class="col-sm-12 col-md-2">
+    <input type="number" name="min_stock" class="form-control" placeholder="最小在庫" value="{{ request('min_stock') }}">
+</div>
+
+
+<div class="col-sm-12 col-md-2">
+    <input type="number" name="max_stock" class="form-control" placeholder="最大在庫" value="{{ request('max_stock') }}">
+</div>
+
        
         <div class="col-sm-12 col-md-1">
-            <button class="btn btn-outline-secondary" type="submit">絞り込み</button>
+            <button class="btn btn-outline-secondary" type="submit">検索</button>
         </div>
     </form>
 </div>
@@ -39,19 +63,23 @@
 <a href="{{ route('products.index') }}" class="btn btn-success mt-3">検索条件を元に戻す</a>
 
 
+<div id="product-list">
+
+
         <h2>商品情報</h2>
         <table class="table table-striped">
             <thead>
                 <tr>
+                    <th>ID</th>
                     <th>商品名</th>
                     <th>メーカー</th>
                     <th>価格
-                    <a href="{{ request()->fullUrlWithQuery(['sort' => 'price', 'direction' => 'asc']) }}">↑</a>
-                    <a href="{{ request()->fullUrlWithQuery(['sort' => 'price', 'direction' => 'desc']) }}">↓</a>
+                    <a href="{{ request()->fullUrlWithQuery(['sort' => 'price', 'direction' => 'asc']) }}">昇順</a>
+                    <a href="{{ request()->fullUrlWithQuery(['sort' => 'price', 'direction' => 'desc']) }}">降順</a>
                     </th>
                     <th>在庫数
-                    <a href="{{ request()->fullUrlWithQuery(['sort' => 'stock', 'direction' => 'asc']) }}">↑</a>
-                    <a href="{{ request()->fullUrlWithQuery(['sort' => 'stock', 'direction' => 'desc']) }}">↓</a>
+                    <a href="{{ request()->fullUrlWithQuery(['sort' => 'stock', 'direction' => 'asc']) }}">昇順</a>
+                    <a href="{{ request()->fullUrlWithQuery(['sort' => 'stock', 'direction' => 'desc']) }}">降順</a>
                     </th>
                     <th>コメント</th>
                     <th>商品画像</th>
@@ -61,6 +89,7 @@
             <tbody>
             @foreach ($products as $product)
                 <tr>
+                    <td>{{ $product->id }}</td>
                     <td>{{ $product->product_name }}</td>
                     <td>{{ $product->company->company_name}}</td>
                     <td>{{ $product->price }}</td>
@@ -71,12 +100,21 @@
                     <td>
                         <a href="{{ route('products.show', $product) }}" class="btn btn-info btn-sm mx-1">詳細表示</a>
                         <!--<a href="{{ route('products.edit', $product) }}" class="btn btn-primary btn-sm mx-1">編集</a>-->
-                        <form method="POST" action="{{ route('products.destroy', $product) }}" class="d-inline">
+                        <!-- <form method="POST" action="{{ route('products.destroy', $product) }}" class="d-inline">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="btn btn-danger btn-sm mx-1"
                             onclick="return confirm('本当に削除しますか？')">削除</button>
+                        
+                        </form> -->
+                        <form method="POST" action="{{ route('products.destroy', $product) }}" class="d-inline delete-form">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-danger btn-sm mx-1">
+                                削除
+                            </button>
                         </form>
+
                     </td>
                 </tr>
             @endforeach
@@ -85,6 +123,63 @@
     </div>
     
     {{ $products->appends(request()->query())->links() }} 
-       
+
+    </div>
 </div>
 @endsection
+
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+<script type="text/javascript">
+
+
+$.ajaxSetup({
+    headers: {
+        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+    }
+});
+
+
+$(document).on('submit', '#search-form', function(e) {
+    e.preventDefault();
+
+    const formData = $(this).serialize(); 
+
+    $.ajax({
+        url: "{{ route('products.index') }}",
+        type: 'GET',
+        data: $(this).serialize(),
+        success: function(response) {
+            $('#product-list').html($(response).find('#product-list').html());
+        },
+        error: function() {
+            alert('検索中にエラーが発生しました');
+        }
+    });
+});
+
+
+$(document).on('submit', '.delete-form', function(e) {
+    e.preventDefault(); 
+
+    if (!confirm('本当に削除しますか？')) return; 
+
+    let form = $(this); 
+    let url = form.attr('action'); 
+
+    $.ajax({
+        url: url,
+        type: 'POST',
+        data: form.serialize(),
+        success: function(response) {
+            alert(response.message); 
+            form.closest('tr').remove(); 
+        },
+        error: function(xhr) {
+            alert('削除に失敗しました: ' + xhr.responseJSON.message); 
+        }
+    });
+});
+
+</script>
+
