@@ -38,7 +38,10 @@ class ProductController extends Controller
     if($max_stock = $request->max_stock){
         $query->where('stock', '<=', $max_stock);
     }
-
+   //追加↓
+    if ($company_id = $request->company_id) {
+        $query->where('company_id', $company_id);
+    }
     
     if($sort = $request->sort){
         $direction = $request->direction == 'desc' ? 'desc' : 'asc'; 
@@ -65,33 +68,24 @@ class ProductController extends Controller
 
     public function store(ProductRequest $request) 
     {
-        DB::beginTransaction();
-
+    
     try {
-        $product = new Product([
-            'product_name' => $request->get('product_name'),
-            'company_id' => $request->get('company_id'),
-            'price' => $request->get('price'),
-            'stock' => $request->get('stock'),
-            'comment' => $request->get('comment'),
-        ]);
-        
-        if($request->hasFile('img_path')){ 
+        $imgPath = null;
+        if ($request->hasFile('img_path')) {
             $filename = $request->img_path->getClientOriginalName();
             $filePath = $request->img_path->storeAs('products', $filename, 'public');
-            $product->img_path = '/storage/' . $filePath;
+            $imgPath = '/storage/' . $filePath;
         }
-        
-        $product->save();
 
-        DB::commit();
-    } catch (\Exception $e) {
-        DB::rollback();
-        return back();
-    }
+        $productData = $request->only(['product_name', 'company_id', 'price', 'stock', 'comment']);
+        Product::createProduct($productData, $imgPath);
 
         return redirect('products');
+    } catch (\Exception $e) {
+        return back()->withErrors('商品登録に失敗しました: ' . $e->getMessage());
     }
+}
+//lここから上修正した点
 
     public function show(Product $product)
     
@@ -111,37 +105,27 @@ class ProductController extends Controller
 
     public function update(ProductRequest $request, Product $product)
     {
-        DB::beginTransaction();
+    
 
     try {
-        
-        $product->product_name = $request->product_name;
-        $product->price = $request->price;
-        $product->stock = $request->stock;
-        $product->comment = $request->comment;
-        $product->company_id = $request->company_id;
-        
-
-        if($request->hasFile('img_path')){ 
+        $imgPath = null;
+        if ($request->hasFile('img_path')) {
             $filename = $request->img_path->getClientOriginalName();
             $filePath = $request->img_path->storeAs('products', $filename, 'public');
-            $product->img_path = '/storage/' . $filePath;
+            $imgPath = '/storage/' . $filePath;
         }
 
-        $product->save();
+        $productData = $request->only(['product_name', 'company_id', 'price', 'stock', 'comment']);
+        $product->updateProduct($productData, $imgPath);
 
-        DB::commit();
-    } catch (\Exception $e) {
-        DB::rollback();
-        return back();
-    }
-
-        
         return redirect()->route('products.index')
             ->with('success', 'Product updated successfully');
-        
+    } catch (\Exception $e) {
+        return back()->withErrors('更新に失敗しました: ' . $e->getMessage());
     }
-
+}
+//ここから上修正点
+//ここから下修正なし
     public function destroy(Product $product)
 
     {

@@ -14,38 +14,16 @@ class SalesController extends Controller
         $productId = $request->input('product_id');
         $quantity = $request->input('quantity', 1);
 
-        DB::beginTransaction();
+   
+    try {
+        
+        Sale::processPurchase($productId, $quantity);
 
-        try {
-            $product = Product::find($productId);
-
-            if (!$product) {
-                return response()->json(['message' => '商品が存在しません'], 404);
-            }
-            if ($product->stock < $quantity) {
-                return response()->json(['message' => '商品が在庫不足です'], 400);
-            }
-
-          
-            $product->stock -= $quantity;
-            $product->save();
-
-            $sale = new Sale([
-                'product_id' => $productId,
-            ]);
-            $sale->save();
-
-           
-            DB::commit();
-
-            return response()->json(['message' => '購入成功']);
-        } catch (\Exception $e) {
-           
-            DB::rollBack();
-
-            return response()->json(['message' => '購入処理中にエラーが発生しました: ' . $e->getMessage()], 500);
-        }
+        return response()->json(['message' => '購入成功']);
+    } catch (\Exception $e) {
+        return response()->json(['message' => '購入処理中にエラーが発生しました: ' . $e->getMessage()], 500);
     }
+}
 }
 
 
